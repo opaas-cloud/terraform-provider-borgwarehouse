@@ -1,6 +1,6 @@
 module terraform-provider-borgwarehouse
 
-go 1.18
+go 1.21
 
 require github.com/hashicorp/terraform-plugin-framework v1.6.1
 
