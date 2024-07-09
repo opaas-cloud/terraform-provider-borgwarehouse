@@ -12,16 +12,16 @@ type BorgWareHouse struct {
 type RepoModel struct {
 	ID                  types.Int64   `tfsdk:"id"`
 	Alias               types.String  `tfsdk:"alias"`
-	RepositoryName      types.String  `tfsdk:"repositoryName"`
+	RepositoryName      types.String  `tfsdk:"repositoryname"`
 	Status              types.Bool    `tfsdk:"status"`
-	LastSave            types.Int64   `tfsdk:"lastSave"`
+	LastSave            types.Int64   `tfsdk:"lastsave"`
 	Alert               types.Int64   `tfsdk:"alert"`
-	StorageSize         types.Int64   `tfsdk:"storageSize"`
-	StorageUsed         types.Int64   `tfsdk:"storageUsed"`
-	SSHPublicKey        types.String  `tfsdk:"sshPublicKey"`
+	StorageSize         types.Int64   `tfsdk:"storagesize"`
+	StorageUsed         types.Int64   `tfsdk:"storageused"`
+	SSHPublicKey        types.String  `tfsdk:"sshpublickey"`
 	Comment             types.String  `tfsdk:"comment"`
-	DisplayDetails      types.Bool    `tfsdk:"displayDetails"`
-	LanCommand          types.Bool    `tfsdk:"lanCommand"`
-	AppendOnlyMode      types.Bool    `tfsdk:"appendOnlyMode"`
-	LastStatusAlertSend types.Float64 `tfsdk:"lastStatusAlertSend"`
+	DisplayDetails      types.Bool    `tfsdk:"displaydetails"`
+	LanCommand          types.Bool    `tfsdk:"lancommand"`
+	AppendOnlyMode      types.Bool    `tfsdk:"appendonlymode"`
+	LastStatusAlertSend types.Float64 `tfsdk:"laststatusalertsend"`
 }
