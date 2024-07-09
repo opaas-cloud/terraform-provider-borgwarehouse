@@ -64,41 +64,41 @@ func (r *repoResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"alias": schema.StringAttribute{
 				Required: true,
 			},
-			"repositoryName": schema.StringAttribute{
+			"repositoryname": schema.StringAttribute{
 				Computed: true,
 			},
 			"status": schema.StringAttribute{
 				Computed: true,
 			},
-			"lastSave": schema.StringAttribute{
+			"lastsave": schema.StringAttribute{
 				Computed: true,
 			},
 			"alert": schema.StringAttribute{
 				Computed: true,
 			},
-			"storageSize": schema.StringAttribute{
+			"storagesize": schema.StringAttribute{
 				Required: true,
 			},
-			"storageUsed": schema.StringAttribute{
+			"storageused": schema.StringAttribute{
 				Computed: true,
 			},
-			"sshPublicKey": schema.StringAttribute{
+			"sshpublickey": schema.StringAttribute{
 				Computed:  true,
 				Sensitive: true,
 			},
 			"comment": schema.StringAttribute{
 				Computed: true,
 			},
-			"displayDetails": schema.StringAttribute{
+			"displaydetails": schema.StringAttribute{
 				Computed: true,
 			},
-			"lanCommand": schema.StringAttribute{
+			"lancommand": schema.StringAttribute{
 				Computed: true,
 			},
-			"appendOnlyMode": schema.StringAttribute{
+			"appendonlymode": schema.StringAttribute{
 				Computed: true,
 			},
-			"lastStatusAlertSend": schema.StringAttribute{
+			"laststatusalertsend": schema.StringAttribute{
 				Computed: true,
 			},
 		},
