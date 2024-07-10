@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"io/ioutil"
 	"os"
 	"terraform-provider-borgwarehouse/tools"
@@ -106,7 +107,7 @@ func (r *repoResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 
 // Create a new resource.
 func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan tools.RepoModelFile
+	var plan tools.RepoModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -119,21 +120,37 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 	//	plan.ID = types.Int64Value(int64(len(r.client.Repos)))
 	//}
 
-	plan.ID = 4
+	plan.ID = types.Int64Value(4)
 
-	plan.RepositoryName = hex.EncodeToString([]byte(plan.Alias))[0:7]
-	plan.Status = false
-	plan.LastSave = 0
-	plan.Alert = 90000
-	plan.StorageUsed = 0
-	plan.SSHPublicKey = "" // ssh key
+	plan.RepositoryName = types.StringValue(hex.EncodeToString([]byte(plan.Alias.String()))[0:7])
+	plan.Status = types.BoolValue(false)
+	plan.LastSave = types.Int64Value(0)
+	plan.Alert = types.Int64Value(90000)
+	plan.StorageUsed = types.Int64Value(0)
+	plan.SSHPublicKey = types.StringValue("") // ssh key
 	plan.Comment = plan.Alias
-	plan.DisplayDetails = true
-	plan.LanCommand = false
-	plan.AppendOnlyMode = false
-	plan.LastStatusAlertSend = 1720474082
+	plan.DisplayDetails = types.BoolValue(true)
+	plan.LanCommand = types.BoolValue(false)
+	plan.AppendOnlyMode = types.BoolValue(false)
+	plan.LastStatusAlertSend = types.Float64Value(1720474082)
 
-	repos := append(r.client.Repos, plan)
+	var convert = tools.RepoModelFile{
+		ID:                  int(plan.ID.ValueInt64()),
+		Alias:               plan.Alias.String(),
+		RepositoryName:      plan.RepositoryName.String(),
+		Status:              plan.Status.ValueBool(),
+		LastSave:            int(plan.LastSave.ValueInt64()),
+		Alert:               int(plan.Alert.ValueInt64()),
+		StorageSize:         int(plan.StorageSize.ValueInt64()),
+		StorageUsed:         int(plan.StorageUsed.ValueInt64()),
+		SSHPublicKey:        plan.SSHPublicKey.String(),
+		Comment:             plan.Comment.String(),
+		DisplayDetails:      plan.DisplayDetails.ValueBool(),
+		LanCommand:          plan.LanCommand.ValueBool(),
+		AppendOnlyMode:      plan.AppendOnlyMode.ValueBool(),
+		LastStatusAlertSend: plan.LastStatusAlertSend.ValueFloat64(),
+	}
+	repos := append(r.client.Repos, convert)
 
 	content, _ := json.Marshal(repos)
 
