@@ -65,14 +65,18 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	var repoArray []tools.RepoModel
-	file, _ := ioutil.ReadFile(config.PATH.String())
-	println(string(file))
+	file, err1 := ioutil.ReadFile(config.PATH.String())
+	if err1 != nil {
+		resp.Diagnostics.AddError("File not found", err1.Error())
+	}
 	err := json.Unmarshal(file, &repoArray)
 	if err != nil {
-		println(err.Error())
-		return
+		resp.Diagnostics.AddError("Cannot get repos", err.Error())
 	}
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	borgWareHouse := tools.BorgWareHouse{
 		Repos: repoArray,
 		Path:  config.PATH.String(),
