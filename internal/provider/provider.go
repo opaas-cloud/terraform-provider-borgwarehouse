@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"io/ioutil"
+	"os"
 	"terraform-provider-borgwarehouse/tools"
 )
 
@@ -65,7 +65,7 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	var repoArray []tools.RepoModel
-	file, err1 := ioutil.ReadFile(config.PATH.String())
+	file, err1 := os.ReadFile(config.PATH.String())
 	if err1 != nil {
 		resp.Diagnostics.AddError("File not found", err1.Error())
 	}
