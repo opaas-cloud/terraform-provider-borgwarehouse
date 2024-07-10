@@ -36,6 +36,7 @@ type borgWareHouseProvider struct {
 
 type borgWareHouseProviderModel struct {
 	PATH types.String `tfsdk:"path"`
+	NAME types.String `tfsdk:"name"`
 }
 
 // Metadata returns the provider type name.
@@ -49,6 +50,9 @@ func (p *borgWareHouseProvider) Schema(_ context.Context, _ provider.SchemaReque
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"path": schema.StringAttribute{
+				Required: true,
+			},
+			"name": schema.StringAttribute{
 				Required: true,
 			},
 		},
@@ -80,7 +84,8 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	}
 	borgWareHouse := tools.BorgWareHouse{
 		Repos: repoArray,
-		Path:  config.PATH.String(),
+		Path:  config.PATH.ValueString(),
+		Name:  config.NAME.ValueString(),
 	}
 
 	resp.DataSourceData = &borgWareHouse

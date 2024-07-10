@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"terraform-provider-borgwarehouse/tools"
 )
 
@@ -114,6 +115,18 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	cmd := exec.Command("ssh-keygen -f ~/.ssh/" + r.client.Name + " -t ed25519 -C 'lz1700' -N ''")
+
+	err := cmd.Run()
+
+	if err != nil {
+		resp.Diagnostics.AddError("Cannot create ssh key", err.Error())
+	}
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	//if r.client.Repos == nil || len(r.client.Repos) == 0 {
 	//	plan.ID = types.Int64Value(0)
 	//} else {
@@ -127,7 +140,7 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.LastSave = types.Int64Value(0)
 	plan.Alert = types.Int64Value(90000)
 	plan.StorageUsed = types.Int64Value(0)
-	plan.SSHPublicKey = types.StringValue("") // ssh key
+	plan.SSHPublicKey = types.StringValue(r.client.Name) // ssh key
 	plan.Comment = plan.Alias
 	plan.DisplayDetails = types.BoolValue(true)
 	plan.LanCommand = types.BoolValue(false)
@@ -156,8 +169,8 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	pwd, _ := os.Getwd()
 
-	err := ioutil.WriteFile(pwd+"/repo.json", content, os.FileMode(0644))
-	if err != nil {
+	err1 := ioutil.WriteFile(pwd+"/repo.json", content, os.FileMode(0644))
+	if err1 != nil {
 		return
 	}
 

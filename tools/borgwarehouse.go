@@ -7,6 +7,7 @@ import (
 type BorgWareHouse struct {
 	Repos []RepoModelFile
 	Path  string
+	Name  string
 }
 
 type RepoModel struct {
