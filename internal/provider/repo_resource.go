@@ -19,7 +19,7 @@ var (
 	_ resource.ResourceWithConfigure = &repoResource{}
 )
 
-// NewPasswordResource is a helper function to simplify the provider implementation.
+// NewRepoResource is a helper function to simplify the provider implementation.
 func NewRepoResource() resource.Resource {
 	return &repoResource{}
 }
@@ -51,7 +51,7 @@ func (r *repoResource) Configure(_ context.Context, req resource.ConfigureReques
 
 // Metadata returns the resource type name.
 func (r *repoResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_password"
+	resp.TypeName = req.ProviderTypeName + "repo"
 }
 
 // Schema defines the schema for the resource.
