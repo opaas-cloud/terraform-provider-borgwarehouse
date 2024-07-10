@@ -119,7 +119,7 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 	//	plan.ID = types.Int64Value(int64(len(r.client.Repos)))
 	//}
 
-	plan.ID = 0
+	plan.ID = 4
 
 	plan.RepositoryName = hex.EncodeToString([]byte(plan.Alias))[0:7]
 	plan.Status = false
