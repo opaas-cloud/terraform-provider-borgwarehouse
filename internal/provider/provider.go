@@ -64,7 +64,7 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 		return
 	}
 
-	var repoArray []tools.RepoModel
+	var repoArray []tools.RepoModelFile
 	pwd, _ := os.Getwd()
 	file, err1 := os.ReadFile(pwd + "/repo.json")
 	if err1 != nil {

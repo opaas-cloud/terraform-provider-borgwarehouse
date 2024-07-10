@@ -5,7 +5,7 @@ import (
 )
 
 type BorgWareHouse struct {
-	Repos []RepoModel
+	Repos []RepoModelFile
 	Path  string
 }
 
@@ -24,4 +24,21 @@ type RepoModel struct {
 	LanCommand          types.Bool    `tfsdk:"lancommand"`
 	AppendOnlyMode      types.Bool    `tfsdk:"appendonlymode"`
 	LastStatusAlertSend types.Float64 `tfsdk:"laststatusalertsend"`
+}
+
+type RepoModelFile struct {
+	ID                  int
+	Alias               string
+	RepositoryName      string
+	Status              bool
+	LastSave            int
+	Alert               int
+	StorageSize         int
+	StorageUsed         int
+	SSHPublicKey        string
+	Comment             string
+	DisplayDetails      bool
+	LanCommand          bool
+	AppendOnlyMode      bool
+	LastStatusAlertSend float64
 }
