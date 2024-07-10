@@ -122,7 +122,7 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	plan.ID = types.Int64Value(4)
 
-	plan.RepositoryName = types.StringValue(hex.EncodeToString([]byte(plan.Alias.String()))[0:7])
+	plan.RepositoryName = types.StringValue(hex.EncodeToString([]byte(plan.Alias.String()))[0:8])
 	plan.Status = types.BoolValue(false)
 	plan.LastSave = types.Int64Value(0)
 	plan.Alert = types.Int64Value(90000)
@@ -136,15 +136,15 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	var convert = tools.RepoModelFile{
 		ID:                  int(plan.ID.ValueInt64()),
-		Alias:               plan.Alias.String(),
-		RepositoryName:      plan.RepositoryName.String(),
+		Alias:               plan.Alias.ValueString(),
+		RepositoryName:      plan.RepositoryName.ValueString(),
 		Status:              plan.Status.ValueBool(),
 		LastSave:            int(plan.LastSave.ValueInt64()),
 		Alert:               int(plan.Alert.ValueInt64()),
 		StorageSize:         int(plan.StorageSize.ValueInt64()),
 		StorageUsed:         int(plan.StorageUsed.ValueInt64()),
-		SSHPublicKey:        plan.SSHPublicKey.String(),
-		Comment:             plan.Comment.String(),
+		SSHPublicKey:        plan.SSHPublicKey.ValueString(),
+		Comment:             plan.Comment.ValueString(),
 		DisplayDetails:      plan.DisplayDetails.ValueBool(),
 		LanCommand:          plan.LanCommand.ValueBool(),
 		AppendOnlyMode:      plan.AppendOnlyMode.ValueBool(),
