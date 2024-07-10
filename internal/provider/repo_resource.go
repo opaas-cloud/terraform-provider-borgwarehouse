@@ -51,7 +51,7 @@ func (r *repoResource) Configure(_ context.Context, req resource.ConfigureReques
 
 // Metadata returns the resource type name.
 func (r *repoResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "repo"
+	resp.TypeName = req.ProviderTypeName + "_repo"
 }
 
 // Schema defines the schema for the resource.

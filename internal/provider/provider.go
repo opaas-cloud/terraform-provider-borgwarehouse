@@ -40,7 +40,7 @@ type borgWareHouseProviderModel struct {
 
 // Metadata returns the provider type name.
 func (p *borgWareHouseProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "borgWareHouse"
+	resp.TypeName = "borgwarehouse"
 	resp.Version = p.version
 }
 
