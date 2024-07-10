@@ -114,11 +114,13 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	if r.client.Repos == nil || len(r.client.Repos) == 0 {
-		plan.ID = types.Int64Value(0)
-	} else {
-		plan.ID = types.Int64Value(int64(len(r.client.Repos)))
-	}
+	//if r.client.Repos == nil || len(r.client.Repos) == 0 {
+	//	plan.ID = types.Int64Value(0)
+	//} else {
+	//	plan.ID = types.Int64Value(int64(len(r.client.Repos)))
+	//}
+
+	plan.ID = types.Int64Value(4)
 
 	plan.RepositoryName = types.StringValue(hex.EncodeToString([]byte(plan.Alias.String()))[0:7])
 	plan.Status = types.BoolValue(false)
