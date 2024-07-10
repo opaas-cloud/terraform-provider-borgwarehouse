@@ -65,7 +65,8 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	var repoArray []tools.RepoModel
-	file, err1 := os.ReadFile(config.PATH.String())
+	pwd, _ := os.Getwd()
+	file, err1 := os.ReadFile(pwd + "/repo.json")
 	if err1 != nil {
 		resp.Diagnostics.AddError("File not found", err1.Error())
 	}
