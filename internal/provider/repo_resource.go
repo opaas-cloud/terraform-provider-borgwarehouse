@@ -58,7 +58,7 @@ func (r *repoResource) Metadata(_ context.Context, req resource.MetadataRequest,
 func (r *repoResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
+			"id": schema.Int64Attribute{
 				Computed: true,
 			},
 			"alias": schema.StringAttribute{
@@ -67,19 +67,19 @@ func (r *repoResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"repositoryname": schema.StringAttribute{
 				Computed: true,
 			},
-			"status": schema.StringAttribute{
+			"status": schema.BoolAttribute{
 				Computed: true,
 			},
-			"lastsave": schema.StringAttribute{
+			"lastsave": schema.Int64Attribute{
 				Computed: true,
 			},
-			"alert": schema.StringAttribute{
+			"alert": schema.Int64Attribute{
 				Computed: true,
 			},
-			"storagesize": schema.StringAttribute{
+			"storagesize": schema.Int64Attribute{
 				Required: true,
 			},
-			"storageused": schema.StringAttribute{
+			"storageused": schema.Int64Attribute{
 				Computed: true,
 			},
 			"sshpublickey": schema.StringAttribute{
@@ -89,16 +89,16 @@ func (r *repoResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"comment": schema.StringAttribute{
 				Computed: true,
 			},
-			"displaydetails": schema.StringAttribute{
+			"displaydetails": schema.BoolAttribute{
 				Computed: true,
 			},
-			"lancommand": schema.StringAttribute{
+			"lancommand": schema.BoolAttribute{
 				Computed: true,
 			},
-			"appendonlymode": schema.StringAttribute{
+			"appendonlymode": schema.BoolAttribute{
 				Computed: true,
 			},
-			"laststatusalertsend": schema.StringAttribute{
+			"laststatusalertsend": schema.Float64Attribute{
 				Computed: true,
 			},
 		},
