@@ -154,7 +154,9 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	content, _ := json.Marshal(repos)
 
-	err := ioutil.WriteFile(r.client.Path, content, os.FileMode(0644))
+	pwd, _ := os.Getwd()
+
+	err := ioutil.WriteFile(pwd+"/repo.json", content, os.FileMode(0644))
 	if err != nil {
 		return
 	}
