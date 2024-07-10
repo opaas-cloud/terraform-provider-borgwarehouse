@@ -24,7 +24,7 @@ func NewRepoResource() resource.Resource {
 	return &repoResource{}
 }
 
-// folderResource is the resource implementation.
+// repoResource is the resource implementation.
 type repoResource struct {
 	client *tools.BorgWareHouse
 }

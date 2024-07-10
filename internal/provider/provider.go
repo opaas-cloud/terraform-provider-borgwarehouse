@@ -66,8 +66,10 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 
 	var repoArray []tools.RepoModel
 	file, _ := ioutil.ReadFile(config.PATH.String())
+	println(string(file))
 	err := json.Unmarshal(file, &repoArray)
 	if err != nil {
+		println(err.Error())
 		return
 	}
 
