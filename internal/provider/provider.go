@@ -78,7 +78,7 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	var repoArray []tools.RepoModelFile
 	pwd, _ := os.Getwd()
 
-	errDownload := downloadFileSFTP("root", config.HOST.ValueString(), 22, "/home/borgwarehouse/app/config/repo.json", pwd+"/repo.json")
+	errDownload := downloadFileSFTP("root", config.HOST.ValueString(), 22, config.PATH.ValueString(), pwd+"/repo.json")
 
 	if errDownload != nil {
 		resp.Diagnostics.AddError("Cannot download repo file", errDownload.Error())

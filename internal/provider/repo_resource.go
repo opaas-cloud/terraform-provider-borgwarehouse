@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"io/ioutil"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+	"io"
 	"os"
 	"terraform-provider-borgwarehouse/tools"
 )
@@ -168,8 +170,20 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	pwd, _ := os.Getwd()
 
-	err1 := ioutil.WriteFile(pwd+"/repo.json", content, os.FileMode(0644))
+	err1 := os.WriteFile(pwd+"/repo.json", content, os.FileMode(0644))
 	if err1 != nil {
+		return
+	}
+
+	errUpload := uploadFileSFTP("root", r.client.Host, 22, pwd+"/repo.json", r.client.Path)
+	if errUpload != nil {
+		resp.Diagnostics.AddError("Cannot upload repo file", errUpload.Error())
+		return
+	}
+
+	err := os.Remove(pwd + "/repo.json")
+	if err != nil {
+		resp.Diagnostics.AddError("Cannot delete temporary file", err.Error())
 		return
 	}
 
@@ -197,4 +211,48 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+func uploadFileSFTP(username, host string, port int, localFilePath, remoteFilePath string) error {
+	pwd, _ := os.Getwd()
+	key, err := publicKeyFile(pwd + "/.keys/terraform_opaas_ssh")
+	if err != nil {
+		return err
+	}
+
+	config := &ssh.ClientConfig{
+		User: username,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(key),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	addr := fmt.Sprintf("%s:%d", host, port)
+	conn, err := ssh.Dial("tcp", addr, config)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	client, err := sftp.NewClient(conn)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	localFile, err := os.Open(localFilePath)
+	if err != nil {
+		return err
+	}
+	defer localFile.Close()
+
+	remoteFile, err := client.Create(remoteFilePath)
+	if err != nil {
+		return err
+	}
+	defer remoteFile.Close()
+
+	_, err = io.Copy(remoteFile, localFile)
+	return err
 }
