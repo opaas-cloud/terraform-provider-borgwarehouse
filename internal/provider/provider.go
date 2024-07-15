@@ -3,11 +3,15 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+	"io/ioutil"
 	"os"
 	"terraform-provider-borgwarehouse/tools"
 )
@@ -74,6 +78,14 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 
 	var repoArray []tools.RepoModelFile
 	pwd, _ := os.Getwd()
+
+	errDownload := downloadFileSFTP("root", config.HOST.ValueString(), 22, "/home/borgwarehouse/app/config/repo.json", pwd+"/repo.json")
+
+	if errDownload != nil {
+		resp.Diagnostics.AddError("Cannot download repo file", errDownload.Error())
+		return
+	}
+
 	file, err1 := os.ReadFile(pwd + "/repo.json")
 	if err1 != nil {
 		resp.Diagnostics.AddError("File not found", err1.Error())
@@ -106,4 +118,59 @@ func (p *borgWareHouseProvider) Resources(_ context.Context) []func() resource.R
 	return []func() resource.Resource{
 		NewRepoResource,
 	}
+}
+
+func downloadFileSFTP(username, host string, port int, remoteFilePath, localFilePath string) error {
+	pwd, _ := os.Getwd()
+
+	key, _ := publicKeyFile(pwd + ".keys/terraform_opaas_ssh")
+	config := &ssh.ClientConfig{
+		User: username,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(key),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	addr := fmt.Sprintf("%s:%d", host, port)
+	conn, err := ssh.Dial("tcp", addr, config)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	client, err := sftp.NewClient(conn)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	remoteFile, err := client.Open(remoteFilePath)
+	if err != nil {
+		return err
+	}
+	defer remoteFile.Close()
+
+	localFile, err := os.Create(localFilePath)
+	if err != nil {
+		return err
+	}
+	defer localFile.Close()
+
+	_, err = remoteFile.WriteTo(localFile)
+	return err
+}
+
+func publicKeyFile(file string) (ssh.Signer, error) {
+	buffer, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := ssh.ParsePrivateKey(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	return key, nil
 }
