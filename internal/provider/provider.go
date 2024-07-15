@@ -102,6 +102,7 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 		Repos: repoArray,
 		Path:  config.PATH.ValueString(),
 		Name:  config.NAME.ValueString(),
+		Host:  config.HOST.ValueString(),
 	}
 
 	resp.DataSourceData = &borgWareHouse
@@ -122,8 +123,7 @@ func (p *borgWareHouseProvider) Resources(_ context.Context) []func() resource.R
 
 func downloadFileSFTP(username, host string, port int, remoteFilePath, localFilePath string) error {
 	pwd, _ := os.Getwd()
-
-	key, _ := publicKeyFile(pwd + ".keys/terraform_opaas_ssh")
+	key, _ := publicKeyFile(pwd + "/.keys/terraform_opaas_ssh")
 	config := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.AuthMethod{
@@ -162,15 +162,18 @@ func downloadFileSFTP(username, host string, port int, remoteFilePath, localFile
 }
 
 func publicKeyFile(file string) (ssh.Signer, error) {
-	buffer, err := ioutil.ReadFile(file)
+	buffer, err := os.ReadFile(file)
 	if err != nil {
+		println("File not found")
 		return nil, err
 	}
 
 	key, err := ssh.ParsePrivateKey(buffer)
 	if err != nil {
+		println("cannot parse private key")
 		return nil, err
 	}
 
 	return key, nil
 }
+
