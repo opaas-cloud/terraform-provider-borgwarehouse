@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
-	"io/ioutil"
 	"os"
 	"terraform-provider-borgwarehouse/tools"
 )
@@ -176,4 +175,3 @@ func publicKeyFile(file string) (ssh.Signer, error) {
 
 	return key, nil
 }
-
