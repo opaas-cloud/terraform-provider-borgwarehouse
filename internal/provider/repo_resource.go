@@ -8,9 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
-	"io"
 	"os"
 	"terraform-provider-borgwarehouse/tools"
 )
@@ -128,20 +125,18 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	//if r.client.Repos == nil || len(r.client.Repos) == 0 {
-	//	plan.ID = types.Int64Value(0)
-	//} else {
-	//	plan.ID = types.Int64Value(int64(len(r.client.Repos)))
-	//}
-
-	plan.ID = types.Int64Value(4)
+	if r.client.Repos == nil || len(r.client.Repos) == 0 {
+		plan.ID = types.Int64Value(0)
+	} else {
+		plan.ID = types.Int64Value(int64(len(r.client.Repos)))
+	}
 
 	plan.RepositoryName = types.StringValue(hex.EncodeToString([]byte(plan.Alias.String()))[0:8])
 	plan.Status = types.BoolValue(false)
 	plan.LastSave = types.Int64Value(0)
 	plan.Alert = types.Int64Value(90000)
 	plan.StorageUsed = types.Int64Value(0)
-	plan.SSHPublicKey = types.StringValue(r.client.Name) // ssh key
+	plan.SSHPublicKey = types.StringValue(r.client.PublicKey) // ssh key
 	plan.Comment = plan.Alias
 	plan.DisplayDetails = types.BoolValue(true)
 	plan.LanCommand = types.BoolValue(false)
@@ -211,48 +206,4 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-}
-
-func uploadFileSFTP(username, host string, port int, localFilePath, remoteFilePath string) error {
-	pwd, _ := os.Getwd()
-	key, err := publicKeyFile(pwd + "/.keys/terraform_opaas_ssh")
-	if err != nil {
-		return err
-	}
-
-	config := &ssh.ClientConfig{
-		User: username,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(key),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	addr := fmt.Sprintf("%s:%d", host, port)
-	conn, err := ssh.Dial("tcp", addr, config)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	client, err := sftp.NewClient(conn)
-	if err != nil {
-		return err
-	}
-	defer client.Close()
-
-	localFile, err := os.Open(localFilePath)
-	if err != nil {
-		return err
-	}
-	defer localFile.Close()
-
-	remoteFile, err := client.Create(remoteFilePath)
-	if err != nil {
-		return err
-	}
-	defer remoteFile.Close()
-
-	_, err = io.Copy(remoteFile, localFile)
-	return err
 }

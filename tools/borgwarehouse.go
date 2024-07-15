@@ -5,10 +5,10 @@ import (
 )
 
 type BorgWareHouse struct {
-	Repos []RepoModelFile
-	Path  string
-	Name  string
-	Host  string
+	Repos     []RepoModelFile
+	Path      string
+	Host      string
+	PublicKey string
 }
 
 type RepoModel struct {

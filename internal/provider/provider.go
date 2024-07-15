@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	"io"
 	"os"
 	"terraform-provider-borgwarehouse/tools"
 )
@@ -29,7 +30,7 @@ func New(version string) func() provider.Provider {
 	}
 }
 
-// hashicupsProvider is the provider implementation.
+// borgWareHouseProvider is the provider implementation.
 type borgWareHouseProvider struct {
 	// version is set to the provider version on release, "dev" when the
 	// provider is built and ran locally, and "test" when running acceptance
@@ -38,9 +39,9 @@ type borgWareHouseProvider struct {
 }
 
 type borgWareHouseProviderModel struct {
-	PATH types.String `tfsdk:"path"`
-	NAME types.String `tfsdk:"name"`
-	HOST types.String `tfsdk:"host"`
+	PATH       types.String `tfsdk:"path"`
+	HOST       types.String `tfsdk:"host"`
+	PUBLIC_KEY types.String `tfsdk:"public_key"`
 }
 
 // Metadata returns the provider type name.
@@ -56,10 +57,10 @@ func (p *borgWareHouseProvider) Schema(_ context.Context, _ provider.SchemaReque
 			"path": schema.StringAttribute{
 				Required: true,
 			},
-			"name": schema.StringAttribute{
+			"host": schema.StringAttribute{
 				Required: true,
 			},
-			"host": schema.StringAttribute{
+			"public_key": schema.StringAttribute{
 				Required: true,
 			},
 		},
@@ -98,10 +99,10 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 		return
 	}
 	borgWareHouse := tools.BorgWareHouse{
-		Repos: repoArray,
-		Path:  config.PATH.ValueString(),
-		Name:  config.NAME.ValueString(),
-		Host:  config.HOST.ValueString(),
+		Repos:     repoArray,
+		Path:      config.PATH.ValueString(),
+		Host:      config.HOST.ValueString(),
+		PublicKey: config.PUBLIC_KEY.ValueString(),
 	}
 
 	resp.DataSourceData = &borgWareHouse
@@ -157,6 +158,50 @@ func downloadFileSFTP(username, host string, port int, remoteFilePath, localFile
 	defer localFile.Close()
 
 	_, err = remoteFile.WriteTo(localFile)
+	return err
+}
+
+func uploadFileSFTP(username, host string, port int, localFilePath, remoteFilePath string) error {
+	pwd, _ := os.Getwd()
+	key, err := publicKeyFile(pwd + "/.keys/terraform_opaas_ssh")
+	if err != nil {
+		return err
+	}
+
+	config := &ssh.ClientConfig{
+		User: username,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(key),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	addr := fmt.Sprintf("%s:%d", host, port)
+	conn, err := ssh.Dial("tcp", addr, config)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	client, err := sftp.NewClient(conn)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	localFile, err := os.Open(localFilePath)
+	if err != nil {
+		return err
+	}
+	defer localFile.Close()
+
+	remoteFile, err := client.Create(remoteFilePath)
+	if err != nil {
+		return err
+	}
+	defer remoteFile.Close()
+
+	_, err = io.Copy(remoteFile, localFile)
 	return err
 }
 
