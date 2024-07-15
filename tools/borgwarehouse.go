@@ -8,6 +8,7 @@ type BorgWareHouse struct {
 	Repos []RepoModelFile
 	Path  string
 	Name  string
+	Host  string
 }
 
 type RepoModel struct {

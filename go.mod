@@ -1,8 +1,12 @@
 module terraform-provider-borgwarehouse
 
-go 1.21
+go 1.18
 
-require github.com/hashicorp/terraform-plugin-framework v1.6.1
+require (
+	github.com/hashicorp/terraform-plugin-framework v1.6.1
+	github.com/pkg/sftp v1.13.6
+	golang.org/x/crypto v0.23.0
+)
 
 require (
 	github.com/fatih/color v1.16.0 // indirect
@@ -15,6 +19,7 @@ require (
 	github.com/hashicorp/terraform-registry-address v0.2.3 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
+	github.com/kr/fs v0.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect

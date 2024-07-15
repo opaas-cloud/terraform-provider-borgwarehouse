@@ -37,6 +37,7 @@ type borgWareHouseProvider struct {
 type borgWareHouseProviderModel struct {
 	PATH types.String `tfsdk:"path"`
 	NAME types.String `tfsdk:"name"`
+	HOST types.String `tfsdk:"host"`
 }
 
 // Metadata returns the provider type name.
@@ -53,6 +54,9 @@ func (p *borgWareHouseProvider) Schema(_ context.Context, _ provider.SchemaReque
 				Required: true,
 			},
 			"name": schema.StringAttribute{
+				Required: true,
+			},
+			"host": schema.StringAttribute{
 				Required: true,
 			},
 		},
