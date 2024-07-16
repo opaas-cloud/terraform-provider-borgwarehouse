@@ -29,18 +29,18 @@ type RepoModel struct {
 }
 
 type RepoModelFile struct {
-	id                  int     `tfsdk:"id"`
-	alias               string  `tfsdk:"alias"`
-	repositoryName      string  `tfsdk:"repositoryname"`
-	status              bool    `tfsdk:"status"`
-	lastSave            int     `tfsdk:"lastsave"`
-	alert               int     `tfsdk:"alert"`
-	storageSize         int     `tfsdk:"storagesize"`
-	storageUsed         int     `tfsdk:"storageused"`
-	sshPublicKey        string  `tfsdk:"sshpublickey"`
-	comment             string  `tfsdk:"comment"`
-	displayDetails      bool    `tfsdk:"displaydetails"`
-	lanCommand          bool    `tfsdk:"lancommand"`
-	appendOnlyMode      bool    `tfsdk:"appendonlymode"`
-	lastStatusAlertSend float64 `tfsdk:"laststatusalertsend"`
+	ID                  int     `json:"id"`
+	Alias               string  `json:"alias"`
+	RepositoryName      string  `json:"repositoryName"`
+	Status              bool    `json:"status"`
+	LastSave            int     `json:"lastSave"`
+	Alert               int     `json:"alert"`
+	StorageSize         int     `json:"storageSize"`
+	StorageUsed         int     `json:"storageUsed"`
+	SSHPublicKey        string  `json:"sshPublicKey"`
+	Comment             string  `json:"comment"`
+	DisplayDetails      bool    `json:"displayDetails"`
+	LanCommand          bool    `json:"lanCommand"`
+	AppendOnlyMode      bool    `json:"appendOnlyMode"`
+	LastStatusAlertSend float64 `json:"lastStatusAlertSend"`
 }
