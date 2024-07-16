@@ -25,6 +25,7 @@ type RepoModel struct {
 	LanCommand          types.Bool    `tfsdk:"lancommand"`
 	AppendOnlyMode      types.Bool    `tfsdk:"appendonlymode"`
 	LastStatusAlertSend types.Float64 `tfsdk:"laststatusalertsend"`
+	PublicKey           types.String  `tfsdk:"public_key"`
 }
 
 type RepoModelFile struct {
@@ -42,4 +43,5 @@ type RepoModelFile struct {
 	LanCommand          bool    `json:"lanCommand"`
 	AppendOnlyMode      bool    `json:"appendOnlyMode"`
 	LastStatusAlertSend float64 `json:"lastStatusAlertSend"`
+	PublicKey           string  `json:"public_key"`
 }
