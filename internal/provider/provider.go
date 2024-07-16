@@ -60,9 +60,6 @@ func (p *borgWareHouseProvider) Schema(_ context.Context, _ provider.SchemaReque
 			"host": schema.StringAttribute{
 				Required: true,
 			},
-			"public_key": schema.StringAttribute{
-				Required: true,
-			},
 		},
 	}
 }
@@ -99,10 +96,9 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 		return
 	}
 	borgWareHouse := tools.BorgWareHouse{
-		Repos:     repoArray,
-		Path:      config.PATH.ValueString(),
-		Host:      config.HOST.ValueString(),
-		PublicKey: config.PUBLIC_KEY.ValueString(),
+		Repos: repoArray,
+		Path:  config.PATH.ValueString(),
+		Host:  config.HOST.ValueString(),
 	}
 
 	resp.DataSourceData = &borgWareHouse

@@ -104,6 +104,9 @@ func (r *repoResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"laststatusalertsend": schema.Float64Attribute{
 				Computed: true,
 			},
+			"public_key": schema.StringAttribute{
+				Required: true,
+			},
 		},
 	}
 }
@@ -132,7 +135,6 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.LastSave = types.Int64Value(0)
 	plan.Alert = types.Int64Value(90000)
 	plan.StorageUsed = types.Int64Value(0)
-	plan.SSHPublicKey = types.StringValue(r.client.PublicKey) // ssh key
 	plan.Comment = plan.Alias
 	plan.DisplayDetails = types.BoolValue(true)
 	plan.LanCommand = types.BoolValue(false)
