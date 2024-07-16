@@ -156,6 +156,7 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		LanCommand:          plan.LanCommand.ValueBool(),
 		AppendOnlyMode:      plan.AppendOnlyMode.ValueBool(),
 		LastStatusAlertSend: plan.LastStatusAlertSend.ValueFloat64(),
+		PublicKey:           plan.PublicKey.ValueString(),
 	}
 
 	repos := append(r.client.Repos, convert)
