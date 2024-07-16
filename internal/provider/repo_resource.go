@@ -214,7 +214,7 @@ func (r *repoResource) Update(_ context.Context, _ resource.UpdateRequest, _ *re
 
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state tools.RepoModelFile
+	var state tools.RepoModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
