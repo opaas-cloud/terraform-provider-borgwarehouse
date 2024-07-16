@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"math/rand"
 	"os"
+	"slices"
 	"strconv"
 	"terraform-provider-borgwarehouse/tools"
 	"time"
@@ -116,14 +117,6 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	//cmd := exec.Command("ssh-keygen -f ~/.ssh/" + r.client.Name + " -t ed25519 -C '" + r.client.Name + "' -N ''")
-
-	//err := cmd.Run()
-
-	//if err != nil {
-	//	resp.Diagnostics.AddError("Cannot create ssh key", err.Error())
-	//}
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -217,6 +210,42 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	var state tools.RepoModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
+
+	test := mapModels(r.client.Repos, func(i tools.RepoModelFile) string {
+		return i.RepositoryName
+	})
+
+	newModels := slices.Delete(r.client.Repos, slices.Index(test, state.RepositoryName.ValueString()), slices.Index(test, state.RepositoryName.ValueString())+1)
+
+	content, _ := json.Marshal(newModels)
+
+	pwd, _ := os.Getwd()
+
+	err1 := os.WriteFile(pwd+"/repo.json", content, os.FileMode(0644))
+	if err1 != nil {
+		return
+	}
+
+	errUpload := uploadFileSFTP("root", r.client.Host, 22, pwd+"/repo.json", r.client.Path)
+	if errUpload != nil {
+		resp.Diagnostics.AddError("Cannot upload repo file", errUpload.Error())
+		return
+	}
+
+	err := os.Remove(pwd + "/repo.json")
+	if err != nil {
+		resp.Diagnostics.AddError("Cannot delete temporary file", err.Error())
+		return
+	}
+
+	command := "sed -i '/" + state.RepositoryName.ValueString() + "/d' /home/borgwarehouse/.ssh/authorized_keys"
+
+	errCommand := executeRemoteCommand("root", r.client.Host, 22, command)
+
+	if errCommand != nil {
+		resp.Diagnostics.AddError("Cannot create ssh key", errCommand.Error())
+	}
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -224,11 +253,22 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 func RandomHexString(n int) string {
 	var src = rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]byte, (n+1)/2) // can be simplified to n/2 if n is always even
+	b := make([]byte, n/2)
 
 	if _, err := src.Read(b); err != nil {
 		panic(err)
 	}
 
 	return hex.EncodeToString(b)[:n]
+}
+
+func mapModels(data []tools.RepoModelFile, f func(model tools.RepoModelFile) string) []string {
+
+	mapped := make([]string, len(data))
+
+	for i, e := range data {
+		mapped[i] = f(e)
+	}
+
+	return mapped
 }
