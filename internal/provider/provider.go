@@ -205,6 +205,37 @@ func uploadFileSFTP(username, host string, port int, localFilePath, remoteFilePa
 	return err
 }
 
+func executeRemoteCommand(username, host string, port int, command string) error {
+	pwd, _ := os.Getwd()
+	key, _ := publicKeyFile(pwd + "/.keys/terraform_opaas_ssh")
+	config := &ssh.ClientConfig{
+		User: username,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(key),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	addr := fmt.Sprintf("%s:%d", host, port)
+	conn, err := ssh.Dial("tcp", addr, config)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	client, err := conn.NewSession()
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	errRun := client.Run(command)
+	if errRun != nil {
+		return err
+	}
+	return err
+}
+
 func publicKeyFile(file string) (ssh.Signer, error) {
 	buffer, err := os.ReadFile(file)
 	if err != nil {
