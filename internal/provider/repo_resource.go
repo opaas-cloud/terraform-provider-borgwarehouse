@@ -85,8 +85,8 @@ func (r *repoResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"storageused": schema.Int64Attribute{
 				Computed: true,
 			},
-			"sshpublickey": schema.StringAttribute{
-				Computed:  true,
+			"public_key": schema.StringAttribute{
+				Required:  true,
 				Sensitive: true,
 			},
 			"comment": schema.StringAttribute{
@@ -103,9 +103,6 @@ func (r *repoResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			},
 			"laststatusalertsend": schema.Float64Attribute{
 				Computed: true,
-			},
-			"public_key": schema.StringAttribute{
-				Required: true,
 			},
 		},
 	}
@@ -156,7 +153,6 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		LanCommand:          plan.LanCommand.ValueBool(),
 		AppendOnlyMode:      plan.AppendOnlyMode.ValueBool(),
 		LastStatusAlertSend: plan.LastStatusAlertSend.ValueFloat64(),
-		PublicKey:           plan.PublicKey.ValueString(),
 	}
 
 	repos := append(r.client.Repos, convert)
