@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"os"
+	"os/exec"
 	"terraform-provider-borgwarehouse/tools"
 )
 
@@ -181,6 +182,16 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 	if err != nil {
 		resp.Diagnostics.AddError("Cannot delete temporary file", err.Error())
 		return
+	}
+
+	command := "command=\"cd /home/borgwarehouse/repos;borg serve --restrict-to-path /home/borgwarehouse/repos/" + convert.RepositoryName + " --storage-quota " + string(rune(convert.StorageSize)) + "G\",restrict " + convert.SSHPublicKey
+
+	cmd := exec.Command("echo '" + command + "' | sudo tee -a /home/borgwarehouse/.ssh/authorized_keys >/dev/null")
+
+	errCommand := cmd.Run()
+
+	if errCommand != nil {
+		resp.Diagnostics.AddError("Cannot create ssh key", errCommand.Error())
 	}
 
 	// Set state to fully populated data
