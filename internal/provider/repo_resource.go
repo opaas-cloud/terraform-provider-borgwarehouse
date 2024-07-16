@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"os"
+	"strconv"
 	"terraform-provider-borgwarehouse/tools"
 )
 
@@ -183,7 +184,7 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	command := "command=\"cd /home/borgwarehouse/repos;borg serve --restrict-to-path /home/borgwarehouse/repos/" + convert.RepositoryName + " --storage-quota " + string(rune(convert.StorageSize)) + "G\",restrict " + convert.SSHPublicKey
+	command := "command=\"cd /home/borgwarehouse/repos;borg serve --restrict-to-path /home/borgwarehouse/repos/" + convert.RepositoryName + " --storage-quota " + strconv.Itoa(convert.StorageSize) + "G\",restrict " + convert.SSHPublicKey
 
 	execute := "echo '" + command + "' | tee -a /home/borgwarehouse/.ssh/authorized_keys >/dev/null"
 
