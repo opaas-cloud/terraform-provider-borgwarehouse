@@ -8,9 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"math/rand"
 	"os"
 	"strconv"
 	"terraform-provider-borgwarehouse/tools"
+	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -132,7 +134,7 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		plan.ID = types.Int64Value(int64(len(r.client.Repos)))
 	}
 
-	plan.RepositoryName = types.StringValue(hex.EncodeToString([]byte(plan.Alias.String()))[0:8])
+	plan.RepositoryName = types.StringValue(RandomHexString(8))
 	plan.Status = types.BoolValue(false)
 	plan.LastSave = types.Int64Value(0)
 	plan.Alert = types.Int64Value(90000)
@@ -218,4 +220,15 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+func RandomHexString(n int) string {
+	var src = rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, (n+1)/2) // can be simplified to n/2 if n is always even
+
+	if _, err := src.Read(b); err != nil {
+		panic(err)
+	}
+
+	return hex.EncodeToString(b)[:n]
 }
