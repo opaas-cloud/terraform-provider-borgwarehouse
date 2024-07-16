@@ -39,9 +39,8 @@ type borgWareHouseProvider struct {
 }
 
 type borgWareHouseProviderModel struct {
-	PATH       types.String `tfsdk:"path"`
-	HOST       types.String `tfsdk:"host"`
-	PUBLIC_KEY types.String `tfsdk:"public_key"`
+	PATH types.String `tfsdk:"path"`
+	HOST types.String `tfsdk:"host"`
 }
 
 // Metadata returns the provider type name.
