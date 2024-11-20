@@ -3,16 +3,13 @@ package provider
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
 	"io"
-	"os"
+	"net/http"
 	"terraform-provider-borgwarehouse/tools"
 )
 
@@ -39,8 +36,9 @@ type borgWareHouseProvider struct {
 }
 
 type borgWareHouseProviderModel struct {
-	PATH types.String `tfsdk:"path"`
-	HOST types.String `tfsdk:"host"`
+	PATH  types.String `tfsdk:"path"`
+	HOST  types.String `tfsdk:"host"`
+	TOKEN types.String `tfsdk:"token"`
 }
 
 // Metadata returns the provider type name.
@@ -59,6 +57,9 @@ func (p *borgWareHouseProvider) Schema(_ context.Context, _ provider.SchemaReque
 			"host": schema.StringAttribute{
 				Required: true,
 			},
+			"token": schema.StringAttribute{
+				Required: true,
+			},
 		},
 	}
 }
@@ -73,20 +74,21 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	var repoArray []tools.RepoModelFile
-	pwd, _ := os.Getwd()
 
-	errDownload := downloadFileSFTP("root", config.HOST.ValueString(), 22, config.PATH.ValueString(), pwd+"/repo.json")
+	request, err := http.NewRequest("GET", config.HOST.ValueString()+"/api/repo", nil)
 
-	if errDownload != nil {
-		resp.Diagnostics.AddError("Cannot download repo file", errDownload.Error())
+	if err != nil {
+		resp.Diagnostics.AddError("Cannot get repos", err.Error())
 		return
 	}
 
-	file, err1 := os.ReadFile(pwd + "/repo.json")
-	if err1 != nil {
-		resp.Diagnostics.AddError("File not found", err1.Error())
-	}
-	err := json.Unmarshal(file, &repoArray)
+	body, _ := io.ReadAll(request.Body)
+
+	var jsonMap map[string]interface{}
+	_ = json.Unmarshal(body, &jsonMap)
+
+	err = json.Unmarshal(jsonMap["repoList"].([]byte), &repoArray)
+
 	if err != nil {
 		resp.Diagnostics.AddError("Cannot get repos", err.Error())
 	}
@@ -96,7 +98,6 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	}
 	borgWareHouse := tools.BorgWareHouse{
 		Repos: repoArray,
-		Path:  config.PATH.ValueString(),
 		Host:  config.HOST.ValueString(),
 	}
 
@@ -114,135 +115,4 @@ func (p *borgWareHouseProvider) Resources(_ context.Context) []func() resource.R
 	return []func() resource.Resource{
 		NewRepoResource,
 	}
-}
-
-func downloadFileSFTP(username, host string, port int, remoteFilePath, localFilePath string) error {
-	pwd, _ := os.Getwd()
-	key, _ := publicKeyFile(pwd + "/.keys/terraform_opaas_ssh")
-	config := &ssh.ClientConfig{
-		User: username,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(key),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	addr := fmt.Sprintf("%s:%d", host, port)
-	conn, err := ssh.Dial("tcp", addr, config)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	client, err := sftp.NewClient(conn)
-	if err != nil {
-		return err
-	}
-	defer client.Close()
-
-	remoteFile, err := client.Open(remoteFilePath)
-	if err != nil {
-		return err
-	}
-	defer remoteFile.Close()
-
-	localFile, err := os.Create(localFilePath)
-	if err != nil {
-		return err
-	}
-	defer localFile.Close()
-
-	_, err = remoteFile.WriteTo(localFile)
-	return err
-}
-
-func uploadFileSFTP(username, host string, port int, localFilePath, remoteFilePath string) error {
-	pwd, _ := os.Getwd()
-	key, err := publicKeyFile(pwd + "/.keys/terraform_opaas_ssh")
-	if err != nil {
-		return err
-	}
-
-	config := &ssh.ClientConfig{
-		User: username,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(key),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	addr := fmt.Sprintf("%s:%d", host, port)
-	conn, err := ssh.Dial("tcp", addr, config)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	client, err := sftp.NewClient(conn)
-	if err != nil {
-		return err
-	}
-	defer client.Close()
-
-	localFile, err := os.Open(localFilePath)
-	if err != nil {
-		return err
-	}
-	defer localFile.Close()
-
-	remoteFile, err := client.Create(remoteFilePath)
-	if err != nil {
-		return err
-	}
-	defer remoteFile.Close()
-
-	_, err = io.Copy(remoteFile, localFile)
-	return err
-}
-
-func executeRemoteCommand(username, host string, port int, command string) error {
-	pwd, _ := os.Getwd()
-	key, _ := publicKeyFile(pwd + "/.keys/terraform_opaas_ssh")
-	config := &ssh.ClientConfig{
-		User: username,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(key),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	addr := fmt.Sprintf("%s:%d", host, port)
-	conn, err := ssh.Dial("tcp", addr, config)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	client, err := conn.NewSession()
-	if err != nil {
-		return err
-	}
-	defer client.Close()
-
-	errRun := client.Run(command)
-	if errRun != nil {
-		return err
-	}
-	return err
-}
-
-func publicKeyFile(file string) (ssh.Signer, error) {
-	buffer, err := os.ReadFile(file)
-	if err != nil {
-		println("File not found")
-		return nil, err
-	}
-
-	key, err := ssh.ParsePrivateKey(buffer)
-	if err != nil {
-		println("cannot parse private key")
-		return nil, err
-	}
-
-	return key, nil
 }

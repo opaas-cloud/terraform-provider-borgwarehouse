@@ -1,19 +1,15 @@
 package provider
 
 import (
+	"bytes"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"math/rand"
-	"os"
-	"slices"
-	"strconv"
+	"net/http"
 	"terraform-provider-borgwarehouse/tools"
-	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -127,66 +123,35 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		plan.ID = types.Int64Value(int64(len(r.client.Repos)))
 	}
 
-	plan.RepositoryName = types.StringValue(RandomHexString(8))
-	plan.Status = types.BoolValue(false)
-	plan.LastSave = types.Int64Value(0)
+	/*
+		alias
+		publickey
+		storage
+		comment
+		alert
+		lan
+		appendonly
+	*/
 	plan.Alert = types.Int64Value(90000)
-	plan.StorageUsed = types.Int64Value(0)
 	plan.Comment = plan.Alias
-	plan.DisplayDetails = types.BoolValue(true)
 	plan.LanCommand = types.BoolValue(false)
 	plan.AppendOnlyMode = types.BoolValue(false)
-	plan.LastStatusAlertSend = types.Float64Value(1720474082)
 
 	var convert = tools.RepoModelFile{
-		ID:                  int(plan.ID.ValueInt64()),
-		Alias:               plan.Alias.ValueString(),
-		RepositoryName:      plan.RepositoryName.ValueString(),
-		Status:              plan.Status.ValueBool(),
-		LastSave:            int(plan.LastSave.ValueInt64()),
-		Alert:               int(plan.Alert.ValueInt64()),
-		StorageSize:         int(plan.StorageSize.ValueInt64()),
-		StorageUsed:         int(plan.StorageUsed.ValueInt64()),
-		SSHPublicKey:        plan.SSHPublicKey.ValueString(),
-		Comment:             plan.Comment.ValueString(),
-		DisplayDetails:      plan.DisplayDetails.ValueBool(),
-		LanCommand:          plan.LanCommand.ValueBool(),
-		AppendOnlyMode:      plan.AppendOnlyMode.ValueBool(),
-		LastStatusAlertSend: plan.LastStatusAlertSend.ValueFloat64(),
+		Alias:          plan.Alias.ValueString(),
+		Alert:          0,
+		StorageSize:    int(plan.StorageSize.ValueInt64()),
+		SSHPublicKey:   plan.SSHPublicKey.ValueString(),
+		Comment:        plan.Comment.ValueString(),
+		LanCommand:     plan.LanCommand.ValueBool(),
+		AppendOnlyMode: plan.AppendOnlyMode.ValueBool(),
 	}
 
-	repos := append(r.client.Repos, convert)
+	out, _ := json.Marshal(convert)
 
-	content, _ := json.Marshal(repos)
+	_, _ = http.NewRequest("POST", r.client.Host+"/api/repo/add", bytes.NewBuffer(out))
 
-	pwd, _ := os.Getwd()
-
-	err1 := os.WriteFile(pwd+"/repo.json", content, os.FileMode(0644))
-	if err1 != nil {
-		return
-	}
-
-	errUpload := uploadFileSFTP("root", r.client.Host, 22, pwd+"/repo.json", r.client.Path)
-	if errUpload != nil {
-		resp.Diagnostics.AddError("Cannot upload repo file", errUpload.Error())
-		return
-	}
-
-	err := os.Remove(pwd + "/repo.json")
-	if err != nil {
-		resp.Diagnostics.AddError("Cannot delete temporary file", err.Error())
-		return
-	}
-
-	command := "command=\"cd /home/borgwarehouse/repos;borg serve --restrict-to-path /home/borgwarehouse/repos/" + convert.RepositoryName + " --storage-quota " + strconv.Itoa(convert.StorageSize) + "G\",restrict " + convert.SSHPublicKey
-
-	execute := "echo '" + command + "' | tee -a /home/borgwarehouse/.ssh/authorized_keys >/dev/null"
-
-	errCommand := executeRemoteCommand("root", r.client.Host, 22, execute)
-
-	if errCommand != nil {
-		resp.Diagnostics.AddError("Cannot create ssh key", errCommand.Error())
-	}
+	_ = append(r.client.Repos, convert)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
@@ -201,7 +166,22 @@ func (r *repoResource) Read(_ context.Context, _ resource.ReadRequest, _ *resour
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
-func (r *repoResource) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
+func (r *repoResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var state tools.RepoModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	model := filter(r.client.Repos, func(s string) bool {
+		return s == state.RepositoryName.ValueString()
+	})
+
+	out, _ := json.Marshal(model)
+
+	_, _ = http.NewRequest("PATCH", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/edit", bytes.NewBuffer(out))
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
@@ -210,64 +190,23 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	test := mapModels(r.client.Repos, func(i tools.RepoModelFile) string {
-		return i.RepositoryName
+	model := filter(r.client.Repos, func(s string) bool {
+		return s == state.RepositoryName.ValueString()
 	})
 
-	newModels := slices.Delete(r.client.Repos, slices.Index(test, state.RepositoryName.ValueString()), slices.Index(test, state.RepositoryName.ValueString())+1)
-
-	content, _ := json.Marshal(newModels)
-
-	pwd, _ := os.Getwd()
-
-	err1 := os.WriteFile(pwd+"/repo.json", content, os.FileMode(0644))
-	if err1 != nil {
-		return
-	}
-
-	errUpload := uploadFileSFTP("root", r.client.Host, 22, pwd+"/repo.json", r.client.Path)
-	if errUpload != nil {
-		resp.Diagnostics.AddError("Cannot upload repo file", errUpload.Error())
-		return
-	}
-
-	err := os.Remove(pwd + "/repo.json")
-	if err != nil {
-		resp.Diagnostics.AddError("Cannot delete temporary file", err.Error())
-		return
-	}
-
-	command := "sed -i '/" + state.RepositoryName.ValueString() + "/d' /home/borgwarehouse/.ssh/authorized_keys"
-
-	errCommand := executeRemoteCommand("root", r.client.Host, 22, command)
-
-	if errCommand != nil {
-		resp.Diagnostics.AddError("Cannot create ssh key", errCommand.Error())
-	}
+	_, _ = http.NewRequest("DELETE", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/delete", nil)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 }
 
-func RandomHexString(n int) string {
-	var src = rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]byte, n/2)
-
-	if _, err := src.Read(b); err != nil {
-		panic(err)
+func filter(slice []tools.RepoModelFile, condition func(string) bool) tools.RepoModelFile {
+	var result tools.RepoModelFile
+	for _, v := range slice {
+		if condition(v.RepositoryName) {
+			result = v
+		}
 	}
-
-	return hex.EncodeToString(b)[:n]
-}
-
-func mapModels(data []tools.RepoModelFile, f func(model tools.RepoModelFile) string) []string {
-
-	mapped := make([]string, len(data))
-
-	for i, e := range data {
-		mapped[i] = f(e)
-	}
-
-	return mapped
+	return result
 }
