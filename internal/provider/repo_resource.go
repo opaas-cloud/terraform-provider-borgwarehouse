@@ -147,10 +147,18 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		AppendOnlyMode: plan.AppendOnlyMode.ValueBool(),
 	}
 
-	out, _ := json.Marshal(convert)
+	out, err := json.Marshal(convert)
 
-	request, _ := http.NewRequest("POST", r.client.Host+"/api/repo/add", bytes.NewBuffer(out))
+	if err != nil {
+		resp.Diagnostics.AddError("Cannot send post request", err.Error())
+	}
+
+	request, err := http.NewRequest("POST", r.client.Host+"/api/repo/add", bytes.NewBuffer(out))
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Cannot send post request", err.Error())
+	}
 
 	client := &http.Client{}
 	response, err := client.Do(request)
