@@ -222,7 +222,7 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	resp.Diagnostics.Append(diags...)
 
 	model := filter(r.client.Repos, func(s string) bool {
-		return s == state.RepositoryName.ValueString()
+		return s == state.Alias.ValueString()
 	})
 
 	request, _ := http.NewRequest("DELETE", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/delete", nil)
