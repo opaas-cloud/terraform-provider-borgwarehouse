@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"io"
-	"log"
 	"net/http"
 	"terraform-provider-borgwarehouse/tools"
 )
@@ -81,9 +80,11 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 
 	client := &http.Client{}
 	response, err := client.Do(request)
+
 	if err != nil {
-		log.Println("Error on response.\n[ERROR] -", err)
+		resp.Diagnostics.AddError("Cannot send post request", err.Error())
 	}
+
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
