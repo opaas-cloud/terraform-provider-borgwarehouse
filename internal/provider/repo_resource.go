@@ -149,7 +149,8 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	out, _ := json.Marshal(convert)
 
-	_, _ = http.NewRequest("POST", r.client.Host+"/api/repo/add", bytes.NewBuffer(out))
+	request, _ := http.NewRequest("POST", r.client.Host+"/api/repo/add", bytes.NewBuffer(out))
+	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 
 	_ = append(r.client.Repos, convert)
 
@@ -177,7 +178,8 @@ func (r *repoResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	out, _ := json.Marshal(model)
 
-	_, _ = http.NewRequest("PATCH", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/edit", bytes.NewBuffer(out))
+	request, _ := http.NewRequest("PATCH", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/edit", bytes.NewBuffer(out))
+	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -194,7 +196,8 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return s == state.RepositoryName.ValueString()
 	})
 
-	_, _ = http.NewRequest("DELETE", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/delete", nil)
+	request, _ := http.NewRequest("DELETE", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/delete", nil)
+	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 
 	if resp.Diagnostics.HasError() {
 		return

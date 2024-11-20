@@ -36,7 +36,6 @@ type borgWareHouseProvider struct {
 }
 
 type borgWareHouseProviderModel struct {
-	PATH  types.String `tfsdk:"path"`
 	HOST  types.String `tfsdk:"host"`
 	TOKEN types.String `tfsdk:"token"`
 }
@@ -51,9 +50,6 @@ func (p *borgWareHouseProvider) Metadata(_ context.Context, _ provider.MetadataR
 func (p *borgWareHouseProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"path": schema.StringAttribute{
-				Required: true,
-			},
 			"host": schema.StringAttribute{
 				Required: true,
 			},
@@ -76,6 +72,7 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	var repoArray []tools.RepoModelFile
 
 	request, err := http.NewRequest("GET", config.HOST.ValueString()+"/api/repo", nil)
+	request.Header.Add("Authorization", "Bearer "+config.TOKEN.ValueString())
 
 	if err != nil {
 		resp.Diagnostics.AddError("Cannot get repos", err.Error())
