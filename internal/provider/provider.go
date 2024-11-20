@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"io"
-	"log"
 	"net/http"
 	"terraform-provider-borgwarehouse/tools"
 )
@@ -75,7 +75,7 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	borgWareHouse := tools.BorgWareHouse{
-		Repos: getRepoList(config.HOST.ValueString(), config.TOKEN.ValueString()),
+		Repos: getRepoList(config.HOST.ValueString(), config.TOKEN.ValueString(), &resp.Diagnostics),
 		Host:  config.HOST.ValueString(),
 		Token: config.TOKEN.ValueString(),
 	}
@@ -96,7 +96,7 @@ func (p *borgWareHouseProvider) Resources(_ context.Context) []func() resource.R
 	}
 }
 
-func getRepoList(host string, token string) []tools.RepoModelFile {
+func getRepoList(host string, token string, log *diag.Diagnostics) []tools.RepoModelFile {
 	request, err := http.NewRequest("GET", host+"/api/repo", nil)
 	request.Header.Add("Authorization", "Bearer "+token)
 
@@ -104,14 +104,14 @@ func getRepoList(host string, token string) []tools.RepoModelFile {
 	response, err := client.Do(request)
 
 	if err != nil {
-		log.Println("Error on response.\n[ERROR] -", err)
+		log.AddError("Error on response.\n[ERROR] -", err.Error())
 	}
 
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		log.Println("Error on response.\n[ERROR] -", err)
+		log.AddError("Error on response.\n[ERROR] -", err.Error())
 	}
 
 	// Unmarshal the JSON into the struct
@@ -119,7 +119,7 @@ func getRepoList(host string, token string) []tools.RepoModelFile {
 
 	err = json.Unmarshal(body, &reqBody)
 	if err != nil {
-		log.Println("Error on response.\n[ERROR] -", err)
+		log.AddError("Error on response.\n[ERROR] -", err.Error())
 	}
 
 	return reqBody.RepoList

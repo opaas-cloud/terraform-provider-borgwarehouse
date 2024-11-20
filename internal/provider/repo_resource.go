@@ -117,21 +117,6 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	if r.client.Repos == nil || len(r.client.Repos) == 0 {
-		plan.ID = types.Int64Value(0)
-	} else {
-		plan.ID = types.Int64Value(int64(len(r.client.Repos)))
-	}
-
-	/*
-		alias
-		publickey
-		storage
-		comment
-		alert
-		lan
-		appendonly
-	*/
 	plan.Alert = types.Int64Value(90000)
 	plan.Comment = plan.Alias
 	plan.LanCommand = types.BoolValue(false)
@@ -169,7 +154,7 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	defer response.Body.Close()
 
-	list := getRepoList(r.client.Host, r.client.Token)
+	list := getRepoList(r.client.Host, r.client.Token, &resp.Diagnostics)
 	model := filter(list, func(s string) bool {
 		return s == plan.Alias.ValueString()
 	})
