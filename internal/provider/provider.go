@@ -36,6 +36,10 @@ type borgWareHouseProvider struct {
 	version string
 }
 
+type RequestBody struct {
+	RepoList []tools.RepoModelFile `json:"repoList"`
+}
+
 type borgWareHouseProviderModel struct {
 	HOST  types.String `tfsdk:"host"`
 	TOKEN types.String `tfsdk:"token"`
@@ -83,16 +87,14 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
-
 	if err != nil {
-		resp.Diagnostics.AddError("Cannot get repos", err.Error())
 		return
 	}
 
-	var jsonMap map[string]interface{}
-	_ = json.Unmarshal(body, &jsonMap)
-
-	err = json.Unmarshal(jsonMap["repoList"].([]byte), &repoArray)
+	// Unmarshal the JSON into the struct
+	err = json.Unmarshal(body, &repoArray)
+	if err != nil {
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError("Cannot get repos", err.Error())
