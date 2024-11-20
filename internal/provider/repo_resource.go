@@ -161,7 +161,19 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	defer response.Body.Close()
 
-	_ = append(r.client.Repos, convert)
+	list := getRepoList(r.client.Host, r.client.Token)
+	model := filter(list, func(s string) bool {
+		return s == plan.Alias.ValueString()
+	})
+
+	// Unmarshal the JSON into the struct
+	plan.ID = types.Int64Value(int64(model.ID))
+	plan.DisplayDetails = types.BoolValue(model.DisplayDetails)
+	plan.LastSave = types.Int64Value(int64(model.LastSave))
+	plan.LastStatusAlertSend = types.Float64Value(model.LastStatusAlertSend)
+	plan.RepositoryName = types.StringValue(model.RepositoryName)
+	plan.Status = types.BoolValue(model.Status)
+	plan.StorageUsed = types.Int64Value(int64(model.StorageUsed))
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
@@ -182,7 +194,7 @@ func (r *repoResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	resp.Diagnostics.Append(diags...)
 
 	model := filter(r.client.Repos, func(s string) bool {
-		return s == state.RepositoryName.ValueString()
+		return s == state.Alias.ValueString()
 	})
 
 	out, _ := json.Marshal(model)
@@ -232,7 +244,7 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 func filter(slice []tools.RepoModelFile, condition func(string) bool) tools.RepoModelFile {
 	var result tools.RepoModelFile
 	for _, v := range slice {
-		if condition(v.RepositoryName) {
+		if condition(v.Alias) {
 			result = v
 		}
 	}

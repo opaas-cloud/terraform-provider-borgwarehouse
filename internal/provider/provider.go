@@ -73,39 +73,8 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 		return
 	}
 
-	var reqBody RequestBody
-
-	request, err := http.NewRequest("GET", config.HOST.ValueString()+"/api/repo", nil)
-	request.Header.Add("Authorization", "Bearer "+config.TOKEN.ValueString())
-
-	client := &http.Client{}
-	response, err := client.Do(request)
-
-	if err != nil {
-		resp.Diagnostics.AddError("Cannot send post request", err.Error())
-	}
-
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return
-	}
-
-	// Unmarshal the JSON into the struct
-	err = json.Unmarshal(body, &reqBody)
-	if err != nil {
-	}
-
-	if err != nil {
-		resp.Diagnostics.AddError("Cannot get repos", err.Error())
-	}
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	borgWareHouse := tools.BorgWareHouse{
-		Repos: reqBody.RepoList,
+		Repos: getRepoList(config.HOST.ValueString(), config.TOKEN.ValueString()),
 		Host:  config.HOST.ValueString(),
 	}
 
@@ -123,4 +92,34 @@ func (p *borgWareHouseProvider) Resources(_ context.Context) []func() resource.R
 	return []func() resource.Resource{
 		NewRepoResource,
 	}
+}
+
+func getRepoList(host string, token string) []tools.RepoModelFile {
+	request, err := http.NewRequest("GET", host+"/api/repo", nil)
+	request.Header.Add("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+	response, err := client.Do(request)
+
+	if err != nil {
+	}
+
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+	}
+
+	// Unmarshal the JSON into the struct
+	var reqBody RequestBody
+
+	err = json.Unmarshal(body, &reqBody)
+	if err != nil {
+	}
+
+	if err != nil {
+	}
+
+	return reqBody.RepoList
+
 }
