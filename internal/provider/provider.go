@@ -76,6 +76,7 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	borgWareHouse := tools.BorgWareHouse{
 		Repos: getRepoList(config.HOST.ValueString(), config.TOKEN.ValueString()),
 		Host:  config.HOST.ValueString(),
+		Token: config.TOKEN.ValueString(),
 	}
 
 	resp.DataSourceData = &borgWareHouse
