@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"io"
+	"log"
 	"net/http"
 	"terraform-provider-borgwarehouse/tools"
 )
@@ -103,12 +104,14 @@ func getRepoList(host string, token string) []tools.RepoModelFile {
 	response, err := client.Do(request)
 
 	if err != nil {
+		log.Println("Error on response.\n[ERROR] -", err)
 	}
 
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
+		log.Println("Error on response.\n[ERROR] -", err)
 	}
 
 	// Unmarshal the JSON into the struct
@@ -116,9 +119,7 @@ func getRepoList(host string, token string) []tools.RepoModelFile {
 
 	err = json.Unmarshal(body, &reqBody)
 	if err != nil {
-	}
-
-	if err != nil {
+		log.Println("Error on response.\n[ERROR] -", err)
 	}
 
 	return reqBody.RepoList
