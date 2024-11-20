@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"log"
 	"net/http"
 	"terraform-provider-borgwarehouse/tools"
 )
@@ -155,9 +154,11 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	client := &http.Client{}
 	response, err := client.Do(request)
+
 	if err != nil {
-		log.Println("Error on response.\n[ERROR] -", err)
+		resp.Diagnostics.AddError("Cannot send post request", err.Error())
 	}
+
 	defer response.Body.Close()
 
 	_ = append(r.client.Repos, convert)
@@ -190,9 +191,11 @@ func (r *repoResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 	client := &http.Client{}
 	response, err := client.Do(request)
+
 	if err != nil {
-		log.Println("Error on response.\n[ERROR] -", err)
+		resp.Diagnostics.AddError("Cannot send post request", err.Error())
 	}
+
 	defer response.Body.Close()
 
 	if resp.Diagnostics.HasError() {
@@ -214,9 +217,11 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 	client := &http.Client{}
 	response, err := client.Do(request)
+
 	if err != nil {
-		log.Println("Error on response.\n[ERROR] -", err)
+		resp.Diagnostics.AddError("Cannot send post request", err.Error())
 	}
+
 	defer response.Body.Close()
 
 	if resp.Diagnostics.HasError() {

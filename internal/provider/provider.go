@@ -73,7 +73,7 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 		return
 	}
 
-	var repoArray []tools.RepoModelFile
+	var reqBody RequestBody
 
 	request, err := http.NewRequest("GET", config.HOST.ValueString()+"/api/repo", nil)
 	request.Header.Add("Authorization", "Bearer "+config.TOKEN.ValueString())
@@ -93,7 +93,7 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	// Unmarshal the JSON into the struct
-	err = json.Unmarshal(body, &repoArray)
+	err = json.Unmarshal(body, &reqBody)
 	if err != nil {
 	}
 
@@ -105,7 +105,7 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 		return
 	}
 	borgWareHouse := tools.BorgWareHouse{
-		Repos: repoArray,
+		Repos: reqBody.RepoList,
 		Host:  config.HOST.ValueString(),
 	}
 
