@@ -140,6 +140,7 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	request, err := http.NewRequest("POST", r.client.Host+"/api/repo/add", bytes.NewBuffer(out))
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
+	request.Header.Add("Content-Type", "application/json")
 
 	if err != nil {
 		resp.Diagnostics.AddError("Cannot send post request", err.Error())
@@ -194,6 +195,8 @@ func (r *repoResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	request, _ := http.NewRequest("PATCH", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/edit", bytes.NewBuffer(out))
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
+	request.Header.Add("Content-Type", "application/json")
+
 	client := &http.Client{}
 	response, err := client.Do(request)
 
@@ -220,6 +223,8 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	request, _ := http.NewRequest("DELETE", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/delete", nil)
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
+	request.Header.Add("Content-Type", "application/json")
+
 	client := &http.Client{}
 	response, err := client.Do(request)
 
