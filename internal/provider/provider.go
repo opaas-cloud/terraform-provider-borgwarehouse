@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"io"
+	"log"
 	"net/http"
 	"terraform-provider-borgwarehouse/tools"
 )
@@ -74,12 +75,19 @@ func (p *borgWareHouseProvider) Configure(ctx context.Context, req provider.Conf
 	request, err := http.NewRequest("GET", config.HOST.ValueString()+"/api/repo", nil)
 	request.Header.Add("Authorization", "Bearer "+config.TOKEN.ValueString())
 
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		log.Println("Error on response.\n[ERROR] -", err)
+	}
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+
 	if err != nil {
 		resp.Diagnostics.AddError("Cannot get repos", err.Error())
 		return
 	}
-
-	body, _ := io.ReadAll(request.Body)
 
 	var jsonMap map[string]interface{}
 	_ = json.Unmarshal(body, &jsonMap)

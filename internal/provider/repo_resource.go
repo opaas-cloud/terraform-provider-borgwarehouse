@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"log"
 	"net/http"
 	"terraform-provider-borgwarehouse/tools"
 )
@@ -152,6 +153,13 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 	request, _ := http.NewRequest("POST", r.client.Host+"/api/repo/add", bytes.NewBuffer(out))
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		log.Println("Error on response.\n[ERROR] -", err)
+	}
+	defer response.Body.Close()
+
 	_ = append(r.client.Repos, convert)
 
 	// Set state to fully populated data
@@ -180,6 +188,12 @@ func (r *repoResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	request, _ := http.NewRequest("PATCH", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/edit", bytes.NewBuffer(out))
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		log.Println("Error on response.\n[ERROR] -", err)
+	}
+	defer response.Body.Close()
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -198,6 +212,12 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	request, _ := http.NewRequest("DELETE", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/delete", nil)
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		log.Println("Error on response.\n[ERROR] -", err)
+	}
+	defer response.Body.Close()
 
 	if resp.Diagnostics.HasError() {
 		return
