@@ -43,3 +43,13 @@ type RepoModelFile struct {
 	AppendOnlyMode      bool    `json:"appendOnlyMode"`
 	LastStatusAlertSend float64 `json:"lastStatusAlertSend"`
 }
+
+type RepoModelRequest struct {
+	Alias          string `json:"alias"`
+	Alert          int    `json:"alert"`
+	StorageSize    int    `json:"storageSize"`
+	SSHPublicKey   string `json:"sshPublicKey"`
+	Comment        string `json:"comment"`
+	LanCommand     bool   `json:"lanCommand"`
+	AppendOnlyMode bool   `json:"appendOnlyMode"`
+}

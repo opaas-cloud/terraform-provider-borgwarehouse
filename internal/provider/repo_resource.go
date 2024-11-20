@@ -122,7 +122,7 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.LanCommand = types.BoolValue(false)
 	plan.AppendOnlyMode = types.BoolValue(false)
 
-	var convert = tools.RepoModelFile{
+	var convert = tools.RepoModelRequest{
 		Alias:          plan.Alias.ValueString(),
 		Alert:          0,
 		StorageSize:    int(plan.StorageSize.ValueInt64()),
