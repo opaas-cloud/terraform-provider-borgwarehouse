@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"net/http"
+	"strconv"
 	"terraform-provider-borgwarehouse/tools"
 )
 
@@ -187,13 +188,9 @@ func (r *repoResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	model := filter(r.client.Repos, func(s string) bool {
-		return s == state.Alias.ValueString()
-	})
+	out, err := json.Marshal(state)
 
-	out, _ := json.Marshal(model)
-
-	request, _ := http.NewRequest("PATCH", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/edit", bytes.NewBuffer(out))
+	request, _ := http.NewRequest("PATCH", r.client.Host+"/api/repo/id/"+strconv.FormatInt(state.ID.ValueInt64(), 10)+"/edit", bytes.NewBuffer(out))
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 	request.Header.Add("Content-Type", "application/json")
 
@@ -217,11 +214,7 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	model := filter(r.client.Repos, func(s string) bool {
-		return s == state.Alias.ValueString()
-	})
-
-	request, _ := http.NewRequest("DELETE", r.client.Host+"/api/repo/id/"+string(rune(model.ID))+"/delete", nil)
+	request, _ := http.NewRequest("DELETE", r.client.Host+"/api/repo/id/"+strconv.FormatInt(state.ID.ValueInt64(), 10)+"/delete", nil)
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 	request.Header.Add("Content-Type", "application/json")
 
