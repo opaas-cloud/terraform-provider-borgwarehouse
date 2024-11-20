@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -120,6 +121,10 @@ func getRepoList(host string, token string, log *diag.Diagnostics) []tools.RepoM
 	err = json.Unmarshal(body, &reqBody)
 	if err != nil {
 		log.AddError("Error on response.\n[ERROR] -", err.Error())
+	}
+	fmt.Printf("ALL REPOS: \n")
+	for _, repo := range reqBody.RepoList {
+		fmt.Printf("Repo Name: %s, Description: %s\n", repo.RepositoryName, repo.Alias)
 	}
 
 	return reqBody.RepoList
