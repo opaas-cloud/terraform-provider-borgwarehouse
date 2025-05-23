@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"io"
 	"net/http"
-	"strconv"
 	"terraform-provider-borgwarehouse/tools"
 )
 
@@ -139,7 +139,7 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		resp.Diagnostics.AddError("Cannot send post request", err.Error())
 	}
 
-	request, err := http.NewRequest("POST", r.client.Host+"/api/repo/add", bytes.NewBuffer(out))
+	request, err := http.NewRequest("POST", r.client.Host+"/api/v1/repositories", bytes.NewBuffer(out))
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 	request.Header.Add("Content-Type", "application/json")
 
@@ -150,11 +150,16 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 	client := &http.Client{}
 	response, err := client.Do(request)
 
-	if err != nil {
+	if err != nil || response.StatusCode != 200 {
 		resp.Diagnostics.AddError("Cannot send post request", err.Error())
 	}
 
-	defer response.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(response.Body)
 
 	list := getRepoList(r.client.Host, r.client.Token, &resp.Diagnostics)
 	model := filter(list, func(s string) bool {
@@ -190,18 +195,23 @@ func (r *repoResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	out, err := json.Marshal(state)
 
-	request, _ := http.NewRequest("PATCH", r.client.Host+"/api/repo/id/"+strconv.FormatInt(state.ID.ValueInt64(), 10)+"/edit", bytes.NewBuffer(out))
+	request, _ := http.NewRequest("PATCH", r.client.Host+"/api/v1/repositories/"+state.RepositoryName.ValueString(), bytes.NewBuffer(out))
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 	request.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
 	response, err := client.Do(request)
 
-	if err != nil {
+	if err != nil || response.StatusCode != 200 {
 		resp.Diagnostics.AddError("Cannot send post request", err.Error())
 	}
 
-	defer response.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(response.Body)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -214,18 +224,23 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	request, _ := http.NewRequest("DELETE", r.client.Host+"/api/repo/id/"+strconv.FormatInt(state.ID.ValueInt64(), 10)+"/delete", nil)
+	request, _ := http.NewRequest("DELETE", r.client.Host+"/api/v1/repositories/"+state.RepositoryName.ValueString(), nil)
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 	request.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
 	response, err := client.Do(request)
 
-	if err != nil {
+	if err != nil || response.StatusCode != 200 {
 		resp.Diagnostics.AddError("Cannot send post request", err.Error())
 	}
 
-	defer response.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(response.Body)
 
 	if resp.Diagnostics.HasError() {
 		return

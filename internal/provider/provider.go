@@ -98,7 +98,7 @@ func (p *borgWareHouseProvider) Resources(_ context.Context) []func() resource.R
 }
 
 func getRepoList(host string, token string, log *diag.Diagnostics) []tools.RepoModelFile {
-	request, err := http.NewRequest("GET", host+"/api/repo", nil)
+	request, err := http.NewRequest("GET", host+"/api/v1/repositories", nil)
 	request.Header.Add("Authorization", "Bearer "+token)
 
 	client := &http.Client{}
