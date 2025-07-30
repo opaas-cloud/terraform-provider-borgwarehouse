@@ -125,7 +125,7 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	var convert = tools.RepoModelRequest{
 		Alias:          plan.Alias.ValueString(),
-		Alert:          0,
+		Alert:          90000,
 		StorageSize:    int(plan.StorageSize.ValueInt64()),
 		SSHPublicKey:   plan.SSHPublicKey.ValueString(),
 		Comment:        plan.Comment.ValueString(),
