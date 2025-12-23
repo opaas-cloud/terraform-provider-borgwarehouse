@@ -5,12 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"strconv"
+	"terraform-provider-borgwarehouse/tools"
+
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"io"
-	"net/http"
-	"terraform-provider-borgwarehouse/tools"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -232,7 +234,7 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	response, err := client.Do(request)
 
 	if err != nil || response.StatusCode != 200 {
-		resp.Diagnostics.AddError("Cannot send post request", err.Error())
+		resp.Diagnostics.AddError("Cannot send post request", strconv.Itoa(response.StatusCode))
 	}
 
 	defer func(Body io.ReadCloser) {
