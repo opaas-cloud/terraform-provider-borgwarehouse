@@ -141,7 +141,7 @@ func (r *repoResource) Create(ctx context.Context, req resource.CreateRequest, r
 		resp.Diagnostics.AddError("Cannot send post request", err.Error())
 	}
 
-	request, err := http.NewRequest("POST", r.client.Host+"/api/v1/repositories", bytes.NewBuffer(out))
+	request, err := http.NewRequest("POST", "https://"+r.client.Host+"/api/v1/repositories", bytes.NewBuffer(out))
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 	request.Header.Add("Content-Type", "application/json")
 
@@ -197,7 +197,7 @@ func (r *repoResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	out, err := json.Marshal(state)
 
-	request, _ := http.NewRequest("PATCH", r.client.Host+"/api/v1/repositories/"+state.RepositoryName.ValueString(), bytes.NewBuffer(out))
+	request, _ := http.NewRequest("PATCH", "https://"+r.client.Host+"/api/v1/repositories/"+state.RepositoryName.ValueString(), bytes.NewBuffer(out))
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 	request.Header.Add("Content-Type", "application/json")
 
@@ -226,7 +226,7 @@ func (r *repoResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	request, _ := http.NewRequest("DELETE", r.client.Host+"/api/v1/repositories/"+state.RepositoryName.ValueString(), nil)
+	request, _ := http.NewRequest("DELETE", "https://"+r.client.Host+"/api/v1/repositories/"+state.RepositoryName.ValueString(), nil)
 	request.Header.Add("Authorization", "Bearer "+r.client.Token)
 	request.Header.Add("Content-Type", "application/json")
 
